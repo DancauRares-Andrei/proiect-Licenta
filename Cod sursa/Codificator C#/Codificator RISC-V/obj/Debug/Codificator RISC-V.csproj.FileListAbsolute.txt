@@ -1,0 +1,20 @@
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\bin\Debug\Codificator RISC-V.exe.config
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\bin\Debug\Codificator RISC-V.exe
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\bin\Debug\Codificator RISC-V.pdb
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.AssemblyReference.cache
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator_RISC_V.Form1.resources
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator_RISC_V.Properties.Resources.resources
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.GenerateResource.cache
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.CoreCompileInputs.cache
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator RISC-V.exe
+C:\Users\Andrei Rares\source\repos\Codificator RISC-V\Codificator RISC-V\obj\Debug\Codificator RISC-V.pdb
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\bin\Debug\Codificator RISC-V.exe.config
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\bin\Debug\Codificator RISC-V.exe
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\bin\Debug\Codificator RISC-V.pdb
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.AssemblyReference.cache
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator_RISC_V.CodificatorRISCV.resources
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator_RISC_V.Properties.Resources.resources
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.GenerateResource.cache
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator RISC-V.csproj.CoreCompileInputs.cache
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator RISC-V.exe
+D:\TUIASI AC CTI\anul IV\ZZ Licența\Cod sursă\2.Codificator C#\Codificator RISC-V\obj\Debug\Codificator RISC-V.pdb
