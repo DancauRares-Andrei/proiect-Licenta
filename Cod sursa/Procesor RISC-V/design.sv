@@ -63,6 +63,8 @@ module RISCVProcessor (
       Jump=0;
       result=0;
       bula=0;
+      jumpAddress_e=0;
+      jumpAddress_m=0;
       instruction_f=32'hAAAAAAFF;
       instruction_d=32'hFFFFFFFF;
       instruction_e=0;
@@ -105,7 +107,7 @@ module RISCVProcessor (
     .CLK_BUTT(CLK_BUTT)
   );
   always @(posedge clk_div) begin
-    //Daca semnaulul reset nu este activ, atunci efectuez operatii.
+    //Daca semnalul reset nu este activ, atunci continui operarea in pipeline.
     if(!reset) begin
       //Control al semnalului bula care se ocupă de gestiunea hazardurilor de date în pipeline.
       if(bula!=0 && Jump==0)
@@ -132,9 +134,9 @@ module RISCVProcessor (
     rs2_d <= instruction_f[24:20];
     rd_d <= instruction_f[11:7];
         //Tratare hazard date
-        if((rs1_d == rd_e || rs2_d == rd_e)&&rd_e!=0)
+        if(rs1_d == rd_e || rs2_d == rd_e)
       bula<=3'b010;
-        else if((rs1_d == rd_m || rs2_d == rd_m)&&rd_m!=0)
+        else if(rs1_d == rd_m || rs2_d == rd_m)
       bula<=3'b001;
       end
     end
@@ -448,13 +450,12 @@ module RISCVProcessor (
               else
                 reg_e<=0;
             end
-            //default: result <= 0;
           endcase
         end
-        //default: result<= 0;
       endcase
       end
-      //Memory
+      //Etapa memory
+      jumpAddress_m<=jumpAddress_e;
       if(bula!=1) begin
        opcode_m <= opcode_e;
     funct3_m <= funct3_e;
@@ -464,8 +465,8 @@ module RISCVProcessor (
     rs1_m <= rs1_e;
     rs2_m <= rs2_e;
     rd_m <= rd_e;
-        jumpAddress_m<=jumpAddress_e;
     instruction_m<=instruction_e;
+        //Pentru aceasta etapa, au impact instructiunile de load si store in memorie.
       case (opcode_m)
         7'b0000011: begin
           // Instructiuni load
@@ -518,12 +519,13 @@ module RISCVProcessor (
         default:  reg_m<=reg_e;
       endcase
       end
-      //Write back
+      //Etapa write back
         opcode_wb<=opcode_m;
     funct3_wb <= funct3_m;
     funct7_wb <= funct7_m;
     rd_wb <= rd_m;
     instruction_wb<=instruction_m;
+      //Este etapa in care se scrie rezultatul operatiei in result si in registrul destinatie.
       case (opcode_wb)
         7'b0110011: begin
           // Instructiuni de tip R
@@ -698,7 +700,7 @@ module RISCVProcessor (
             default: result <= 0;
           endcase
         end
-        7'b0000011: begin//Load-uri(scriere in registru destinatie)
+        7'b0000011: begin//Load-uri
           case (funct3_m)
             3'b000: begin  // LB
               registers[rd_m] <= reg_m;
@@ -730,7 +732,7 @@ module RISCVProcessor (
             end
           endcase
         end
-        7'b0100011: begin//Store-uri(doar pentru afisare rezultat)
+        7'b0100011: begin//Store-uri
           result<=reg_m;
         end
         7'b0110111: begin  // LUI
@@ -785,11 +787,13 @@ module RISCVProcessor (
       endcase
       end
     else
-      //daca reset este activ,resetez pc, bancul de registre, flag-ul Jump si memoria de date
+      //Daca reset este activ,resetez pc, bancul de registre, flag-ul Jump si memoria de date.
       begin
         pc <= 64'h0;
         result<=0;
         Jump <= 0;
+        jumpAddress_e<=0;
+      jumpAddress_m<=0;
         bula<=0;
         for (i = 0; i <= 31; i = i + 1)
           registers[i] <= (i==2)?128:0;
