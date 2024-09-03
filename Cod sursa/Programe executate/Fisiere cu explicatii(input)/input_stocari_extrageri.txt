@@ -1,0 +1,18 @@
+FFF00093  addi ra, zero, -1
+00100193  addi gp, zero, 1
+00100023  sb ra, 0(zero)
+403080B3  sub ra, ra, gp
+00101223  sh ra, 4(zero)
+403080B3  sub ra, ra, gp
+00103423  sd ra, 8(zero)
+0011E463  bltu gp, ra, 8
+00000033  add zero, zero, zero
+0030F463  bgeu ra, gp, 8
+00000033  add zero, zero, zero
+00000503  lb a0, 0(zero)
+00803583  ld a1, 8(zero)
+00401603  lh a2, 4(zero)
+00F04683  lbu a3, 15(zero)
+00005703  lhu a4, 0(zero)
+00406783  lwu a5, 4(zero)
+000000E7  jalr ra, 0(zero)

@@ -1,0 +1,5 @@
+00A00313  addi t1, zero, 10
+00100393  addi t2, zero, 1
+40730333  sub t1, t1, t2
+FE031EE3  bne t1, zero, -4
+000000E7  jalr ra, 0(zero)
