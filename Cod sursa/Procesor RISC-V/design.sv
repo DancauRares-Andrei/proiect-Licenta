@@ -1,27 +1,35 @@
-//Varianta cu un singur bloc always@ si adaugare constrangere registru 0
+//Clock controlat de buton
 module ClockDivider (
   input wire clk_in,
+  input wire CLK_BUTT,
   output reg clk_out
 );
-  reg [31:0] count;
-
-  initial begin
-    clk_out = 0; // Initializare cu valoarea 0
-    count = 0; // Initializare cu valoarea 0
-  end
-
-  always @(posedge clk_in) begin
-    if (count == 1) begin //50000000-1
-      clk_out <= ~clk_out;
-      count <= 0;
-    end else begin
-      count <= count + 1;
+  reg [1:0] state;  // Starea automatului pe 2 biti pentru cele trei stări
+	initial begin
+      state=2'b00;
+      clk_out=0;
     end
+  always @(posedge clk_in) begin
+      // Automatul Moore
+      case (state)
+        2'b00: state <= (CLK_BUTT) ? 2'b01 : 2'b00;  // Starea 1
+        2'b01: state <= (CLK_BUTT) ? 2'b10 : 2'b00;  // Starea 2
+        2'b10: state <= (CLK_BUTT) ? 2'b10 : 2'b00;  // Starea 3
+      endcase
+
+      // Comutare clock in functie de starea automatului
+      case (state)
+        2'b00: clk_out <= 1'b0;  // Starea 1, iesire 0
+        2'b01: clk_out <= 1'b1;      // Starea 2, iesire 1
+        2'b10: clk_out <= 1'b0;  // Starea 3, iesire 0
+      endcase
   end
 endmodule
+
 module RISCVProcessor (
     input clk,
     input reset,
+    input wire CLK_BUTT,
   output reg [15:0] result
 );
   reg[63:0] pc;
@@ -36,7 +44,7 @@ module RISCVProcessor (
   reg [2:0] funct3;
   reg [6:0] funct7;
   reg [11:0] imm12;
-  reg [4:0] shamt;
+  reg [5:0] shamt;//Pentru RV64I, shamt are 6 biti
   reg [4:0] rs1;
   reg [4:0] rs2;
   reg [4:0] rd;
@@ -60,16 +68,18 @@ module RISCVProcessor (
     wire clk_div;
   ClockDivider clk_divider (
     .clk_in(clk),
-    .clk_out(clk_div)
+    .clk_out(clk_div),
+    .CLK_BUTT(CLK_BUTT)
   );
   always @(posedge clk_div) begin
     //Calculez noua instructiune si parametrii acesteia
     instruction = {memory[pc][7:0], memory[pc+1][7:0], memory[pc+2][7:0], memory[pc+3][7:0]};
+    //Decodific instructiunea
         opcode = instruction[6:0];
       funct3 = instruction[14:12];
       funct7 = instruction[31:25];
       imm12 = instruction[31:20];
-      shamt = instruction[24:20];
+      shamt = instruction[25:20];
       rs1 = instruction[19:15];
       rs2 = instruction[24:20];
       rd = instruction[11:7];
@@ -101,9 +111,9 @@ module RISCVProcessor (
                         result=0;  
               end 
             end
-            3'b001: begin  // SLL
+            3'b001: begin  // SLL pentru RV64I
                if (rd!=0) begin
-              registers[rd] = registers[rs1] << registers[rs2][4:0];
+                 registers[rd] = registers[rs1] << registers[rs2][5:0];
               result=registers[rd]; end
               else
                         result=0;
@@ -134,16 +144,16 @@ module RISCVProcessor (
                         result=0;
             end
             3'b101: begin
-              if (funct7 == 7'b0000000) begin  // SRL
+              if (funct7 == 7'b0000000) begin  // SRL pentru RV64I
               if (rd!=0) begin
-                registers[rd] = registers[rs1] >> registers[rs2][4:0];
+                registers[rd] = registers[rs1] >> registers[rs2][5:0];
                 result=registers[rd]; 
                 end
                 else
                         result=0;
-              end else if (funct7 == 7'b0100000) begin  // SRA
+              end else if (funct7 == 7'b0100000) begin  // SRA pentru RV64I
               if (rd!=0) begin
-                registers[rd] = registers[rs1] >>> registers[rs2][4:0];
+                registers[rd] = registers[rs1] >>> registers[rs2][5:0];
                 result=registers[rd]; 
                 end
                 else
