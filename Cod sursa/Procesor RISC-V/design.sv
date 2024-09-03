@@ -24,18 +24,17 @@ module RISCVProcessor (
   output reg [15:0] result
 );
   reg[63:0] pc;
-  reg[63:0] regdif;
-  reg Jump,Branch;
-  reg[63:0] jumpAddress,branchAddress;
+  longint regdif;
+  reg Jump;
+  reg[63:0] jumpAddress;
   reg [64:0] registers [0:31];
   reg [64:0] dataMemory[0:299];
-  reg [8:0] memory[0:27];
+  reg [8:0] memory[0:175];
   reg [31:0] instruction;
   reg [6:0] opcode;
   reg [4:0] funct3;
   reg [6:0] funct7;
   reg [11:0] imm12;
-  reg [19:0] imm20;
   reg [4:0] shamt;
   reg [4:0] rs1;
   reg [4:0] rs2;
@@ -47,8 +46,6 @@ module RISCVProcessor (
       pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
       //Initializare registrii de lucru
       Jump=0;
-      Branch=0;
-      branchAddress=0;
       jumpAddress=0;
       regdif=0;
       //Initializare cu 0 banc de registre
@@ -71,7 +68,6 @@ module RISCVProcessor (
       funct3 = instruction[14:12];
       funct7 = instruction[31:25];
       imm12 = instruction[31:20];
-    imm20 = {instruction[31],instruction[19:12],instruction[20],instruction[30:21]}; //pentru UJ
       shamt = instruction[24:20];
       rs1 = instruction[19:15];
       rs2 = instruction[24:20];
@@ -81,13 +77,8 @@ module RISCVProcessor (
         if (reset) begin
             pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
         end
-    else if (Branch) begin
-            pc = branchAddress; // Actualizez PC in urma unui branch
-      		Branch=0;
-        end
         else if (Jump) begin
-            pc = jumpAddress; // Actualizez PC in urma unui jump
-            Jump=0;
+            pc = jumpAddress; // Actualizez PC in urma unui jump/branch
         end
     else begin
             pc= pc + 4; // Pentru celelalte instructiuni
@@ -99,6 +90,7 @@ module RISCVProcessor (
         // Identificarea tipului de instructiune
       case (opcode)
         7'b0110011: begin
+           Jump=0;
           // Instructiuni de tip R
           case (funct3)
             3'b000: begin  // ADD, SUB
@@ -152,6 +144,7 @@ module RISCVProcessor (
         end
         7'b0010011: begin
           // Instructiuni de tip I
+           Jump=0;
           case (funct3)
             3'b000: begin  // ADDI
               registers[rd] = registers[rs1] + {{52{imm12[11]}},imm12};
@@ -185,7 +178,7 @@ module RISCVProcessor (
             3'b101: begin
               if (funct7 == 7'b0000000) 
                 begin  // SRLI
-                  registers[rd] <= registers[rs1] >> shamt;
+                  registers[rd] = registers[rs1] >> shamt;
                   result=registers[rd]; 
                 end 
               else if (funct7 == 7'b0100000) 
@@ -199,6 +192,7 @@ module RISCVProcessor (
         end
         7'b0000011: begin
           // Instructiuni load
+           Jump=0;
           case (funct3)
             3'b000: begin  // LB
               registers[rd] = {{56{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
@@ -233,7 +227,7 @@ module RISCVProcessor (
         end
         7'b0100011: begin
           // Instructiuni store
-          //imm12={instruction[31:25],instruction[11:7]};
+           Jump=0;
           case (funct3)
             3'b000: begin  // SB
               dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][7:0];
@@ -257,15 +251,17 @@ module RISCVProcessor (
         7'b0110111: begin  // LUI
           registers[rd] = {{32{instruction[31]}},instruction[31:20], 12'b0};
           result=registers[rd]; 
+           Jump=0;
         end
         7'b0010111: begin  // AUIPC
           registers[rd] = pc + {{32{instruction[31]}},instruction[31:20], 12'b0};
           result=registers[rd]; 
+           Jump=0;
         end
         7'b1101111: begin  // JAL
           registers[rd] = pc + 4;
           Jump = 1;
-          jumpAddress=pc+{{43{imm20[19]}},imm20, 1'b0};
+          jumpAddress=pc+{{43{instruction[31]}},{instruction[31],instruction[19:12],instruction[20],instruction[30:21]}, 1'b0};
           result=jumpAddress;
         end
         7'b1100111: begin  // JALR
@@ -276,58 +272,38 @@ module RISCVProcessor (
         end
         7'b1100011: begin
           // Instructiuni branch
-          imm12={instruction[31],instruction[7],instruction[30:25],instruction[11:8]};
           case (funct3)
             3'b000: begin  // BEQ
-              if (registers[rs1] == registers[rs2]) 
-                begin
-                  Branch=1;
-                  //branchAddress={instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                  branchAddress={{52{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                  result=branchAddress;
-                end
+                  Jump=(registers[rs1] == registers[rs2]);
+                  jumpAddress={{52{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+              result=Jump?jumpAddress:0;
             end
             3'b001: begin  // BNE
-              if (registers[rs1] != registers[rs2]) 
-                begin
-                  Branch=1;
-                  branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                  result=branchAddress;
-                end
+                  Jump=(registers[rs1] != registers[rs2]);
+                  jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                  result=Jump?jumpAddress:0;
             end
             3'b100: begin  // BLT
               regdif=registers[rs1] - registers[rs2];
-              if (regdif[63]) 
-              begin
-                Branch=1;
-branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                result=branchAddress;
-              end
+                Jump=regdif[63];
+jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=Jump?jumpAddress:0;
             end
             3'b101: begin  // BGE
               regdif=registers[rs1] - registers[rs2];
-              if (!regdif[63]) 
-              begin
-                Branch=1;
-                branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                result=branchAddress;
-              end
+                Jump=!regdif[63];
+                jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=Jump?jumpAddress:0;
             end
             3'b110: begin  // BLTU
-              if (registers[rs1] < registers[rs2]) 
-              begin
-                Branch=1;
-branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                result=branchAddress;
-              end
+                Jump=(registers[rs1] < registers[rs2]);
+jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=Jump?jumpAddress:0;
             end
             3'b111: begin  // BGEU
-              if (registers[rs1] >= registers[rs2])
-              begin
-                Branch=1;
-branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                result=branchAddress;
-              end
+                Jump=(registers[rs1] >= registers[rs2]);
+jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=Jump?jumpAddress:0;
             end
             default: result = 0;
           endcase
@@ -339,7 +315,6 @@ branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instructi
       begin
         result=0;
         Jump = 0;
-        Branch=0;
         for (i = 0; i <= 31; i = i + 1)
           registers[i] = 0;
         for (i = 0; i <= 299; i = i + 1)
