@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>569</width>
+    <height>319</height>
+   </rect>
+  </property>
+  <property name="baseSize">
+   <size>
+    <width>567</width>
+    <height>365</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Codificator RISC-V RV64I</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../cropped-riscv-favicon-32x32.ico</normaloff>../cropped-riscv-favicon-32x32.ico</iconset>
+  </property>
+  <widget class="QPushButton" name="buttonSal">
+   <property name="geometry">
+    <rect>
+     <x>149</x>
+     <y>70</y>
+     <width>161</width>
+     <height>40</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Salvare în fișier input</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="buttonCod">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>70</y>
+     <width>140</width>
+     <height>40</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Codificare instrucțiune</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="buttonIncFis">
+   <property name="geometry">
+    <rect>
+     <x>3</x>
+     <y>3</y>
+     <width>140</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Încărcare fișier</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="buttonDel">
+   <property name="geometry">
+    <rect>
+     <x>149</x>
+     <y>3</y>
+     <width>161</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Eliminare conținut</string>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="listInput">
+   <property name="geometry">
+    <rect>
+     <x>313</x>
+     <y>3</y>
+     <width>252</width>
+     <height>314</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="textInstr">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>45</y>
+     <width>140</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="inputMethodHints">
+    <set>Qt::ImhNone</set>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="acceptRichText">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label1">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>29</y>
+     <width>151</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Instrucțiune de codificat</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label2">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>110</y>
+     <width>221</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni R: op rd, rs1, rs2</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label3">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>130</y>
+     <width>221</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni I: op rd, rs1, imm</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label4">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>150</y>
+     <width>261</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni branch: op rs1, rs2, imm</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label5">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>170</y>
+     <width>241</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni load: op rd, imm(rs1)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label6">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>190</y>
+     <width>251</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni store: op rd, imm(rs1)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label7">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>210</y>
+     <width>281</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiuni lui, auipc și jal: op rd, imm</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label8">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>230</y>
+     <width>241</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Format instrucțiune jalr: jalr rd, imm(rs1)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label9">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>250</y>
+     <width>301</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <kerning>true</kerning>
+    </font>
+   </property>
+   <property name="text">
+    <string>Fișier input: Salvare codificare în format explicativ
+big endian</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::PlainText</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label10">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>285</y>
+     <width>281</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Fișier instruction: Salvare în format little endian 
+pentru executare pe procesor</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="buttonInstr">
+   <property name="geometry">
+    <rect>
+     <x>149</x>
+     <y>29</y>
+     <width>161</width>
+     <height>38</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Salvare în fișier instruction</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
