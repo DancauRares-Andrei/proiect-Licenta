@@ -1,4 +1,4 @@
-//De trecut la LE si de modificat instructiunile de load si store sa foloseasca registrii de 8 biti
+// De verificat rezultatul trecerii de la 64 la 8 biti pentru RAM
 //Clock controlat de buton
 module ClockDivider (
   input wire clk_in,
@@ -38,8 +38,8 @@ module RISCVProcessor (
   reg Jump;
   reg[63:0] jumpAddress;
   reg [63:0] registers [0:31];
-  reg [63:0] dataMemory[0:128];
-  reg [8:0] memory[0:59];
+  reg [8:0] dataMemory[0:128];
+  reg [8:0] memory[0:175];
   reg [31:0] instruction;
   reg [6:0] opcode;
   reg [2:0] funct3;
@@ -49,7 +49,6 @@ module RISCVProcessor (
   reg [4:0] rs1;
   reg [4:0] rs2;
   reg [4:0] rd;
-  reg [63:0] regtest;
   integer i;
     initial begin
       //Citirea din fisier a continutului memoriei
@@ -73,8 +72,8 @@ module RISCVProcessor (
     .CLK_BUTT(CLK_BUTT)
   );
   always @(posedge clk_div) begin
-    //Calculez noua instructiune si parametrii acesteia
-    instruction = {memory[pc][7:0], memory[pc+1][7:0], memory[pc+2][7:0], memory[pc+3][7:0]};
+    //Preiau din memorie LE instructiunea si o interpretez in format BE
+    instruction = {memory[pc+3][7:0], memory[pc+2][7:0], memory[pc+1][7:0], memory[pc][7:0]};
     //Decodific instructiunea
         opcode = instruction[6:0];
       funct3 = instruction[14:12];
@@ -273,15 +272,15 @@ module RISCVProcessor (
               result=registers[rd]; 
             end
             3'b001: begin  // LH
-              registers[rd] = {{48{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]};
+              registers[rd] = {{48{dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
               result=registers[rd]; 
             end
             3'b010: begin  // LW
-              registers[rd] = {{32{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              registers[rd] = {{32{dataMemory[3+registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[3+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[2+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[0+registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
               result=registers[rd]; 
             end
             3'b011: begin  // LD
-              registers[rd] = dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}];
+              registers[rd] = {dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[2+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[3+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[4+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[5+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[6+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[7+registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
               result=registers[rd]; 
             end
             3'b100: begin  // LBU
@@ -289,11 +288,11 @@ module RISCVProcessor (
               result=registers[rd]; 
             end
             3'b101: begin  // LHU
-              registers[rd] = {48'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]}; 
+              registers[rd] = {48'b0,dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]}; 
               result=registers[rd]; 
             end
             3'b110: begin  // LWU
-              registers[rd] = {32'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              registers[rd] = {32'b0,dataMemory[3+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[2+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[1+registers[rs1]+{{52{imm12[11]}},imm12}][7:0],dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
               result=registers[rd]; 
             end
             default: result = 0;
@@ -308,16 +307,18 @@ module RISCVProcessor (
               result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b001: begin  // SH
-              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][15:0];
-              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
+              regdif=registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}};
+              {dataMemory[regdif+1][7:0],dataMemory[regdif][7:0]} = registers[rs2][15:0];
+              result = {dataMemory[regdif+1][7:0],dataMemory[regdif][7:0]};
             end
             3'b010: begin  // SW
-              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][31:0];
-              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
+              regdif=registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}};
+              {dataMemory[regdif][7:0],dataMemory[regdif+1][7:0],dataMemory[regdif+2][7:0],dataMemory[regdif+3][7:0]}  = registers[rs2][31:0];
+              result = {dataMemory[regdif+2][7:0],dataMemory[regdif+3][7:0]};
             end
             3'b011: begin  // SD
-              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2];
-              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
+              regdif=registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}};            {dataMemory[regdif][7:0],dataMemory[regdif+1][7:0],dataMemory[regdif+2][7:0],dataMemory[regdif+3][7:0],dataMemory[regdif+4][7:0],dataMemory[regdif+5][7:0],dataMemory[regdif+6][7:0],dataMemory[regdif+7][7:0]} = registers[rs2];
+              result = {dataMemory[regdif+6][7:0],dataMemory[regdif+7][7:0]};
             end
             default: result = 0;
           endcase
@@ -334,7 +335,6 @@ module RISCVProcessor (
         7'b0010111: begin  // AUIPC
         if (rd!=0) begin
           registers[rd] = pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
-          regtest=instruction[31:12];
           result=registers[rd]; 
            Jump=0;
            end
@@ -355,7 +355,6 @@ module RISCVProcessor (
         end
         7'b1100011: begin
           // Instructiuni branch
-          regtest={instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
           case (funct3)
             3'b000: begin  // BEQ
                   Jump=(registers[rs1] == registers[rs2]);
