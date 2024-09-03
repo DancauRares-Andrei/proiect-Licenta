@@ -23,7 +23,6 @@ module RISCVProcessor_tb;
         $dumpfile("simulation.vcd");
         $dumpvars;
 
-
         // Oprirea simularii
         #1800 $finish;
     end

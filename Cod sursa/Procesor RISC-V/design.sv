@@ -24,15 +24,15 @@ module RISCVProcessor (
   output reg [15:0] result
 );
   reg[63:0] pc;
-  longint regdif;
+  reg[63:0] regdif;
   reg Jump;
   reg[63:0] jumpAddress;
-  reg [64:0] registers [0:31];
-  reg [64:0] dataMemory[0:299];
+  reg [63:0] registers [0:31];
+  reg [63:0] dataMemory[0:99];
   reg [8:0] memory[0:175];
   reg [31:0] instruction;
   reg [6:0] opcode;
-  reg [4:0] funct3;
+  reg [2:0] funct3;
   reg [6:0] funct7;
   reg [11:0] imm12;
   reg [4:0] shamt;
@@ -52,8 +52,7 @@ module RISCVProcessor (
         for (i = 0; i <= 31; i = i + 1)
           registers[i] = 0;
       //Intializare cu 0 memorie de date
-      for (i = 0; i <= 299; i = i + 1)
-        dataMemory[i] = 0;
+      $readmemh("data.mem", dataMemory);
       result=0;
     end
     wire clk_div;
@@ -249,12 +248,12 @@ module RISCVProcessor (
           endcase
         end
         7'b0110111: begin  // LUI
-          registers[rd] = {{32{instruction[31]}},instruction[31:20], 12'b0};
+          registers[rd] = {{32{instruction[31]}},instruction[31:12], 12'b0};
           result=registers[rd]; 
            Jump=0;
         end
         7'b0010111: begin  // AUIPC
-          registers[rd] = pc + {{32{instruction[31]}},instruction[31:20], 12'b0};
+          registers[rd] = pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
           result=registers[rd]; 
            Jump=0;
         end
@@ -317,8 +316,7 @@ jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction
         Jump = 0;
         for (i = 0; i <= 31; i = i + 1)
           registers[i] = 0;
-        for (i = 0; i <= 299; i = i + 1)
-          dataMemory[i] = 0;
+        $readmemh("data.mem", dataMemory);
     end
   
   end
