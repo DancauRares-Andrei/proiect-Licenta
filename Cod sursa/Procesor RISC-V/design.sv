@@ -1,240 +1,350 @@
-module processor (
-    input wire clk,
-    input wire reset,
-    input wire [31:0] instruction,
-    output reg [63:0] result
+module ClockDivider (
+  input wire clk_in,
+  output reg clk_out
 );
+  reg [31:0] count;
+
+  initial begin
+    clk_out = 0; // Initializare cu valoarea 0
+    count = 0; // Initializare cu valoarea 0
+  end
+
+  always @(posedge clk_in) begin
+    if (count == 1) begin //50000000-1
+      clk_out <= ~clk_out;
+      count <= 0;
+    end else begin
+      count <= count + 1;
+    end
+  end
+endmodule
+module RISCVProcessor (
+    input clk,
+    input reset,
+  output reg [15:0] result
+);
+  reg[63:0] pc;
+  reg[63:0] regdif;
+  reg Jump,Branch;
+  reg[63:0] jumpAddress,branchAddress;
+  reg [64:0] registers [0:31];
+  reg [64:0] dataMemory[0:299];
+  reg [8:0] memory[0:27];
+  reg [31:0] instruction;
   reg [6:0] opcode;
   reg [4:0] funct3;
   reg [6:0] funct7;
   reg [11:0] imm12;
-  reg [11:0] imm20;
-  reg [6:0] shamt;
+  reg [19:0] imm20;
+  reg [4:0] shamt;
   reg [4:0] rs1;
   reg [4:0] rs2;
   reg [4:0] rd;
-  reg [63:0] pc;
-  reg [63:0] regfile[0:31];
-  reg [63:0] memory[0:63];
-  always @(posedge clk or posedge reset) begin
-    if (reset) begin
-      pc <= 64'h0;
-      for (int i = 0; i < 32; i = i + 1) begin
-        regfile[i] <= 64'h0;
-      end
-      for (int i = 0; i < 64; i = i + 1) begin
-        memory[i] <= 64'h0;
-      end
-    end else begin
-      pc <= pc + 4;
-      opcode <= instruction[6:0];
-      funct3 <= instruction[14:12];
-      funct7 <= instruction[31:25];
-      imm12 <= instruction[31:20];
-      imm20 <= instruction[31:12];
-      shamt <= instruction[24:20];
-      rs1 <= instruction[19:15];
-      rs2 <= instruction[24:20];
-      rd <= instruction[11:7];
+  integer i;
+    initial begin
+      //Citirea din fisier a continutului memoriei
+      $readmemh("instructions.mem", memory);
+      pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
+      //Initializare registrii de lucru
+      Jump=0;
+      Branch=0;
+      branchAddress=0;
+      jumpAddress=0;
+      regdif=0;
+      //Initializare cu 0 banc de registre
+        for (i = 0; i <= 31; i = i + 1)
+          registers[i] = 0;
+      //Intializare cu 0 memorie de date
+      for (i = 0; i <= 299; i = i + 1)
+        dataMemory[i] = 0;
+      result=0;
     end
-  end
-
-  always @(posedge clk) begin
-    if (reset) begin
-      result <= 64'h0;
-    end else begin
+    wire clk_div;
+  ClockDivider clk_divider (
+    .clk_in(clk),
+    .clk_out(clk_div)
+  );
+  //La fiecare schimbare a lui PC calculez noua instructiune si parametrii acesteia
+  always @(pc) begin
+        instruction = {memory[pc][7:0], memory[pc+1][7:0], memory[pc+2][7:0], memory[pc+3][7:0]};
+        opcode = instruction[6:0];
+      funct3 = instruction[14:12];
+      funct7 = instruction[31:25];
+      imm12 = instruction[31:20];
+    imm20 = {instruction[31],instruction[19:12],instruction[20],instruction[30:21]}; //pentru UJ
+      shamt = instruction[24:20];
+      rs1 = instruction[19:15];
+      rs2 = instruction[24:20];
+      rd = instruction[11:7];
+    end
+  always @(posedge clk_div) begin
+        if (reset) begin
+            pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
+        end
+    else if (Branch) begin
+            pc = branchAddress; // Actualizez PC in urma unui branch
+      		Branch=0;
+        end
+        else if (Jump) begin
+            pc = jumpAddress; // Actualizez PC in urma unui jump
+            Jump=0;
+        end
+    else begin
+            pc= pc + 4; // Pentru celelalte instructiuni
+        end
+    end
+  //Prelucrarea instructiunii
+  always @(negedge clk_div) begin
+    if(!reset)
+        // Identificarea tipului de instructiune
       case (opcode)
         7'b0110011: begin
-          // R-type instructions
+          // Instructiuni de tip R
           case (funct3)
             3'b000: begin  // ADD, SUB
-              if (funct7 == 7'b0000000) result <= regfile[rs1] + regfile[rs2];
-              else if (funct7 == 7'b0100000) result <= regfile[rs1] - regfile[rs2];
-              regfile[rd] <= result;
+              if (funct7 == 7'b0000000)
+                begin
+                   registers[rd]= registers[rs1] + registers[rs2]; 
+                   result=registers[rd]; 
+                end
+              else if (funct7 == 7'b0100000) 
+              begin 
+                registers[rd]= registers[rs1] - registers[rs2]; 
+                result=registers[rd];          
+              end 
             end
             3'b001: begin  // SLL
-              result <= regfile[rs1] << (regfile[rs2] & 5'b11111);
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] << registers[rs2][4:0];
+              result=registers[rd]; 
             end
-            3'b010: begin  // SLT
-              result <= (regfile[rs1] < regfile[rs2]) ? 1 : 0;
-              regfile[rd] <= result;
+            3'b010: begin  // SLT verificat pe cazul numerelor negative
+              regdif=registers[rs1] - registers[rs2];
+              registers[rd] = regdif[63];
+              result=registers[rd]; 
             end
             3'b011: begin  // SLTU
-              result <= (regfile[rs1] < regfile[rs2]) ? 1 : 0;
-              regfile[rd] <= result;
+              registers[rd] = (registers[rs1] < registers[rs2]) ? 1 : 0;
+              result=registers[rd]; 
             end
             3'b100: begin  // XOR
-              result <= regfile[rs1] ^ regfile[rs2];
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] ^ registers[rs2];
+              result=registers[rd]; 
             end
             3'b101: begin
               if (funct7 == 7'b0000000) begin  // SRL
-                result <= regfile[rs1] >> (regfile[rs2] & 5'b11111);
-                regfile[rd] <= result;
+                registers[rd] = registers[rs1] >> registers[rs2][4:0];
+                result=registers[rd]; 
               end else if (funct7 == 7'b0100000) begin  // SRA
-                result <= $signed(regfile[rs1]) >>> (regfile[rs2] & 5'b11111);
-                regfile[rd] <= result;
+                registers[rd] = registers[rs1] >>> registers[rs2][4:0];
+                result=registers[rd]; 
               end
             end
             3'b110: begin  // OR
-              result <= regfile[rs1] | regfile[rs2];
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] | registers[rs2];
+              result=registers[rd]; 
             end
             3'b111: begin  // AND
-              result <= regfile[rs1] & regfile[rs2];
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] & registers[rs2];
+              result=registers[rd]; 
             end
-            default: result <= 64'h0;
+            default: result = 0;
           endcase
         end
         7'b0010011: begin
-          // I-type instructions
+          // Instructiuni de tip I
           case (funct3)
             3'b000: begin  // ADDI
-              result <= regfile[rs1] + imm12;
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] + {{52{imm12[11]}},imm12};
+              result=registers[rd]; 
             end
-            3'b010: begin  // SLTI
-              result <= (regfile[rs1] < imm12) ? 1 : 0;
-              regfile[rd] <= result;
+            3'b010: begin  // SLTI 
+              regdif=registers[rs1]-{{52{imm12[11]}},imm12};
+              registers[rd] = regdif[63];
+              result=registers[rd]; 
             end
             3'b011: begin  // SLTIU
-              result <= (regfile[rs1] < imm12) ? 1 : 0;
-              regfile[rd] <= result;
+              registers[rd] = (registers[rs1] < {{52{imm12[11]}},imm12}) ? 1 : 0;
+              result=registers[rd]; 
             end
             3'b100: begin  // XORI
-              result <= regfile[rs1] ^ imm12;
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] ^ {{52{imm12[11]}},imm12}; 
+              result=registers[rd]; 
             end
             3'b110: begin  // ORI
-              result <= regfile[rs1] | imm12;
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] | {{52{imm12[11]}},imm12};
+              result=registers[rd]; 
             end
             3'b111: begin  // ANDI
-              result <= regfile[rs1] & imm12;
-              regfile[rd] <= result;
+              registers[rd] = registers[rs1] & {{52{imm12[11]}},imm12};
+              result=registers[rd]; 
             end
-            3'b001: begin
-              if (funct7 == 7'b0000000) begin  // SLLI
-                result <= regfile[rs1] << shamt;
-                regfile[rd] <= result;
-              end
+            3'b001: begin // SLLI
+                registers[rd] = registers[rs1] << shamt;
+                result=registers[rd]; 
             end
             3'b101: begin
-              if (funct7 == 7'b0000000) begin  // SRLI
-                result <= regfile[rs1] >> shamt;
-                regfile[rd] <= result;
-              end else if (funct7 == 7'b0100000) begin  // SRAI
-                result <= $signed(regfile[rs1]) >>> shamt;
-                regfile[rd] <= result;
-              end
+              if (funct7 == 7'b0000000) 
+                begin  // SRLI
+                  registers[rd] <= registers[rs1] >> shamt;
+                  result=registers[rd]; 
+                end 
+              else if (funct7 == 7'b0100000) 
+                begin  // SRAI
+                  registers[rd] = registers[rs1] >>> shamt;
+                  result=registers[rd]; 
+                end
             end
-            default: result <= 64'h0;
+            default: result = 0;
           endcase
         end
         7'b0000011: begin
-          // Load instructions
+          // Instructiuni load
           case (funct3)
             3'b000: begin  // LB
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {{56{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
+              result=registers[rd]; 
             end
             3'b001: begin  // LH
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {{48{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]};
+              result=registers[rd]; 
             end
             3'b010: begin  // LW
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {{32{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              result=registers[rd]; 
             end
             3'b011: begin  // LD
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}];
+              result=registers[rd]; 
             end
             3'b100: begin  // LBU
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {56'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
+              result=registers[rd]; 
             end
             3'b101: begin  // LHU
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {48'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]}; 
+              result=registers[rd]; 
             end
             3'b110: begin  // LWU
-              result <= memory[regfile[rs1]+imm12];
-              regfile[rd] <= result;
+              registers[rd] = {32'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              result=registers[rd]; 
             end
-            default: result <= 64'h0;
+            default: result = 0;
           endcase
         end
         7'b0100011: begin
-          // Store instructions
-          // imm12<={instruction[31:25],instruction[11:7]};
+          // Instructiuni store
+          //imm12={instruction[31:25],instruction[11:7]};
           case (funct3)
             3'b000: begin  // SB
-              memory[regfile[rs1]+{instruction[31:25], instruction[11:7]}] <= regfile[rs2][7:0];
-              result <= regfile[rs2][7:0];
+              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][7:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b001: begin  // SH
-              memory[regfile[rs1]+{instruction[31:25], instruction[11:7]}] <= regfile[rs2][15:0];
-              result <= regfile[rs2][7:0];
+              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][15:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b010: begin  // SW
-              memory[regfile[rs1]+{instruction[31:25], instruction[11:7]}] <= regfile[rs2][31:0];
-              result <= regfile[rs2][7:0];
+              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][31:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b011: begin  // SD
-              memory[regfile[rs1]+{instruction[31:25], instruction[11:7]}] <= regfile[rs2][63:0];
-              result <= regfile[rs2][63:0];
+              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
-            default: result <= 64'h0;
+            default: result = 0;
           endcase
         end
         7'b0110111: begin  // LUI
-          result <= {imm20, 12'b0};
-          regfile[rd] <= result;
-        end
-        7'b1101111: begin  // JAL
-          result <= pc + 4;
-          pc <= pc + imm20;
-          regfile[rd] <= result;
-        end
-        7'b1100111: begin  // JALR
-          result <= pc + 4;
-          pc <= (regfile[rs1] + imm12) & 32'hfffffffe;
-          regfile[rd] <= result;
+          registers[rd] = {{32{instruction[31]}},instruction[31:20], 12'b0};
+          result=registers[rd]; 
         end
         7'b0010111: begin  // AUIPC
-          result <= pc + {imm20, 12'b0};
-          regfile[rd] <= result;
+          registers[rd] = pc + {{32{instruction[31]}},instruction[31:20], 12'b0};
+          result=registers[rd]; 
+        end
+        7'b1101111: begin  // JAL
+          registers[rd] = pc + 4;
+          Jump = 1;
+          jumpAddress=pc+{{43{imm20[19]}},imm20, 1'b0};
+          result=jumpAddress;
+        end
+        7'b1100111: begin  // JALR
+          registers[rd] = pc + 4;
+          Jump = 1;
+          jumpAddress=registers[rs1]+{{52{imm12[11]}},imm12[11:1],1'b0};
+          result=jumpAddress;
         end
         7'b1100011: begin
-          // Branch instructions
-          // imm12<={instruction[31:25],instruction[11:7]};
+          // Instructiuni branch
+          imm12={instruction[31],instruction[7],instruction[30:25],instruction[11:8]};
           case (funct3)
             3'b000: begin  // BEQ
-              if (regfile[rs1] == regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              if (registers[rs1] == registers[rs2]) 
+                begin
+                  Branch=1;
+                  //branchAddress={instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                  branchAddress={{52{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                  result=branchAddress;
+                end
             end
             3'b001: begin  // BNE
-              if (regfile[rs1] != regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              if (registers[rs1] != registers[rs2]) 
+                begin
+                  Branch=1;
+                  branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                  result=branchAddress;
+                end
             end
             3'b100: begin  // BLT
-              if (regfile[rs1] < regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              regdif=registers[rs1] - registers[rs2];
+              if (regdif[63]) 
+              begin
+                Branch=1;
+branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=branchAddress;
+              end
             end
             3'b101: begin  // BGE
-              if (regfile[rs1] >= regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              regdif=registers[rs1] - registers[rs2];
+              if (!regdif[63]) 
+              begin
+                Branch=1;
+                branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=branchAddress;
+              end
             end
             3'b110: begin  // BLTU
-              if (regfile[rs1] < regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              if (registers[rs1] < registers[rs2]) 
+              begin
+                Branch=1;
+branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=branchAddress;
+              end
             end
             3'b111: begin  // BGEU
-              if (regfile[rs1] >= regfile[rs2]) pc <= pc + {instruction[31:25], instruction[11:7]};
+              if (registers[rs1] >= registers[rs2])
+              begin
+                Branch=1;
+branchAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                result=branchAddress;
+              end
             end
-            default: result <= 64'h0;
+            default: result = 0;
           endcase
         end
-        default: result <= 64'h0;
+        default: result = 0;
       endcase
+    else
+      //daca reset este activ, resetez bancul de registre, flag-urile Jump si Branch si memoria de date
+      begin
+        result=0;
+        Jump = 0;
+        Branch=0;
+        for (i = 0; i <= 31; i = i + 1)
+          registers[i] = 0;
+        for (i = 0; i <= 299; i = i + 1)
+          dataMemory[i] = 0;
     end
+  
   end
 endmodule
