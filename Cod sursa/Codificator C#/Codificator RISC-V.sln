@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33328.57
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codificator RISC-V", "Codificator RISC-V\Codificator RISC-V.csproj", "{B146D1E6-2DA8-4DA6-80A0-0769575525D6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B146D1E6-2DA8-4DA6-80A0-0769575525D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B146D1E6-2DA8-4DA6-80A0-0769575525D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B146D1E6-2DA8-4DA6-80A0-0769575525D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B146D1E6-2DA8-4DA6-80A0-0769575525D6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1A6DAC8C-C6AE-4C95-B009-DAAB8A390EAC}
+	EndGlobalSection
+EndGlobal
