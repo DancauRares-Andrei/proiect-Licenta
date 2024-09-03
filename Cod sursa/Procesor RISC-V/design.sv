@@ -1,4 +1,4 @@
-// Pipeline fara jump/branch
+// De rezolvat hazardul de control
 //Clock controlat de buton
 module ClockDivider (
   input wire clk_in,
@@ -34,8 +34,9 @@ module RISCVProcessor (
   output reg [15:0] result
 );
   reg [1:0] bula;
-  reg[63:0] pc;
+  reg[63:0] pc,pc_jump;
   reg[63:0] reg_e,reg_m;
+  reg Jump;
   reg [63:0] registers [0:31];
   reg [8:0] dataMemory[0:128];
   reg [8:0] memory[0:175];
@@ -54,6 +55,7 @@ module RISCVProcessor (
       $readmemh("instructions.mem", memory);
       pc = 0; // Initializare cu 0
       //Initializare registrii de lucru
+      Jump=0;
       //Initializare cu 0 banc de registre
         for (i = 0; i <= 31; i = i + 1)
           registers[i] = (i==2)?128:0;
@@ -70,9 +72,10 @@ module RISCVProcessor (
   );
   always @(posedge clk_div) begin
     //if(!reset) begin
-    if(bula==0)
+    if(bula==0 && Jump==0)
     instruction_f <= {memory[pc+3][7:0], memory[pc+2][7:0], memory[pc+1][7:0], memory[pc][7:0]};
     if(bula==0)begin
+      if(Jump==0)begin
     instruction_d<=instruction_f;
     opcode_d <= instruction_f[6:0];
     funct3_d <= instruction_f[14:12];
@@ -88,16 +91,17 @@ module RISCVProcessor (
     else if(rs1_d == rd_m || rs2_d == rd_m)
       bula<=3'b001;
       end
+    end
         // Execute
-    if(bula<1) begin
-    opcode_e <= opcode_d;
-    funct3_e <= funct3_d;
-    funct7_e <= funct7_d;
-    imm12_e <= imm12_d;
-    shamt_e <= shamt_d;
-    rs1_e <= rs1_d;
-    rs2_e <= rs2_d;
-    rd_e <= rd_d;
+    if(bula<1 && Jump==0) begin
+    opcode_e <= instruction_d[6:0];
+    funct3_e <= instruction_d[14:12];
+    funct7_e <= instruction_d[31:25];
+    imm12_e <= instruction_d[31:20];
+    shamt_e <= instruction_d[25:20];
+    rs1_e <= instruction_d[19:15];
+    rs2_e <= instruction_d[24:20];
+    rd_e <= instruction_d[11:7];
     instruction_e<=instruction_d;
       case (opcode_e)
         7'b0110011: begin
@@ -172,7 +176,7 @@ module RISCVProcessor (
         7'b0010111: begin  // AUIPC
           reg_e <= pc - 12 + {{32{instruction_e[31]}},instruction_e[31:12], 12'b0};//Valoare PC de la fetch
         end
-       /* 7'b1101111: begin  // JAL
+        7'b1101111: begin  // JAL
           Jump <= 1;
           reg_e <= (pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0};       
           pc<=(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0};
@@ -186,10 +190,10 @@ module RISCVProcessor (
           reg_e<= pc - 8;
           Jump <= 1;
           bula<=3;
-          //pc_jump<=registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0};
+          pc_jump<=registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0};
           /*instruction_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[1+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};
           instruction_d<={memory[7+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[6+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[5+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[4+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};
-          instruction_f<={memory[11+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[10+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[9+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[8+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};     
+          instruction_f<={memory[11+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[10+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[9+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[8+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};     */
         end
         7'b1100011: begin
           // Instructiuni branch
@@ -206,7 +210,7 @@ module RISCVProcessor (
                 /*pc<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
                 instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
                 instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
+                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};*/
               end
               else
                 reg_e<=0;
@@ -221,7 +225,7 @@ module RISCVProcessor (
                 /*pc<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
                 instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
                 instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
+                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};*/
               end
               else
                 reg_e<=0;
@@ -281,20 +285,20 @@ module RISCVProcessor (
             end
             default: result <= 0;
           endcase
-        end*/
+        end
         //default: result<= 0;
       endcase
       end
       //Memory
       if(bula!=1) begin
-        opcode_m <= opcode_e;
-    funct3_m <= funct3_e;
-    funct7_m <= funct7_e;
-    imm12_m <= imm12_e;
-    shamt_m <= shamt_e;
-    rs1_m <= rs1_e;
-    rs2_m <= rs2_e;
-    rd_m <= rd_e;
+        opcode_m <= instruction_e[6:0];
+    funct3_m <= instruction_e[14:12];
+    funct7_m <= instruction_e[31:25];
+    imm12_m <= instruction_e[31:20];
+    shamt_m <= instruction_e[25:20];
+    rs1_m <= instruction_e[19:15];
+    rs2_m <= instruction_e[24:20];
+    rd_m <= instruction_e[11:7];
     instruction_m<=instruction_e;
       case (opcode_m)
         7'b0000011: begin
@@ -585,7 +589,7 @@ module RISCVProcessor (
            else
                         result<=0;
         end
-       /* 7'b1101111: begin  // JAL
+        7'b1101111: begin  // JAL
           registers[rd_wb]<= reg_m; 
           result<=reg_m; 
         end
@@ -600,7 +604,7 @@ module RISCVProcessor (
               result<=reg_m;
             end
             3'b001: begin  // BNE
-                 result<=reg_m;            	
+                 result<=8'haa;//reg_m;            	
             end
             3'b100: begin  // BLT
               result<=reg_m;
@@ -616,16 +620,16 @@ module RISCVProcessor (
             end
             default: result <= 0;
           endcase
-        end*/
+        end
         default: result<= 0;
       endcase
 
       if(bula!=0)
         bula<=bula-1;
-      /*if (Jump==1) begin
+      if (Jump==1) begin
             Jump<=0;
         pc<=pc_jump;
-        end*/
+        end
       else if(bula==0) begin
             pc<= pc + 4; // Pentru celelalte instructiuni
         end
