@@ -1,0 +1,7 @@
+00500293  addi t0, zero, 5
+00100393  addi t2, zero, 1
+00730333  add t1, t1, t2
+00138393  addi t2, t2, 1
+FE53CCE3  blt t2, t0, -8
+00000313  addi t1, zero, 0
+000000E7  jalr ra, 0(zero)

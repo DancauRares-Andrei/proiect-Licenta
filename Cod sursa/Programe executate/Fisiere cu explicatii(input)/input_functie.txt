@@ -1,0 +1,28 @@
+FE010113  addi sp, sp, -32
+00113C23  sd ra, 24(sp)
+00813823  sd s0, 16(sp)
+02010413  addi s0, sp, 32
+00200513  addi a0, zero, 2
+00000097  auipc x1, 0
+020000EF  jal x1, 32
+FEA43423  sd a0, -24(s0)
+00000793  addi a5, zero, 0
+00F00533  add a0, zero, a5
+01813083  ld ra, 24(sp)
+01013403  ld s0, 16(sp)
+02010113  addi sp, sp, 32
+038000EF  jal ra, 56
+FE010113  addi sp, sp, -32
+00813C23  sd s0, 24(sp)
+02010413  addi s0, sp, 32
+FEA43423  sd a0, -24(s0)
+00A00733  add a4, zero, a0
+00E007B3  add a5, zero, a4
+00179793  slli a5, a5, 1
+00E787B3  add a5, a5, a4
+00178793  addi a5, a5, 1
+00F00533  add a0, zero, a5
+01813403  ld s0, 24(sp)
+02010113  addi sp, sp, 32
+FB5FF0EF  jal ra, -76
+000000E7  jalr ra, 0(zero)

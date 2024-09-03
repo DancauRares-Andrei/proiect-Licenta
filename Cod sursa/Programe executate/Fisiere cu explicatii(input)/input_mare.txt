@@ -1,0 +1,44 @@
+00A00093  addi ra, zero, 10
+01408113  addi sp, ra, 20
+002081B3  add gp, ra, sp
+40218233  sub tp, gp, sp
+000012B7  lui t0, 1
+03200313  addi t1, zero, 50
+0062F3B3  and t2, t0, t1
+0053EE33  or t3, t2, t0
+007E4EB3  xor t4, t3, t2
+003EFF13  andi t5, t4, 3
+006F6F93  ori t6, t5, 6
+009FC413  xori s0, t6, 9
+00245493  srli s1, s0, 2
+00949933  sll s2, s1, s1
+009959B3  srl s3, s2, s1
+00241493  slli s1, s0, 2
+00302023  sw gp, 0(zero)
+00002503  lw a0, 0(zero)
+001122B3  slt t0, sp, ra
+0091B333  sltu t1, gp, s1
+406453B3  sra t2, s0, t1
+02D4A693  slti a3, s1, 45
+0049B913  sltiu s2, s3, 4
+40255793  srai a5, a0, 2
+01300223  sb s3, 4(zero)
+00801423  sh s0, 8(zero)
+01C03623  sd t3, 12(zero)
+00400C83  lb s9, 4(zero)
+00801B83  lh s7, 8(zero)
+00404F03  lbu t5, 4(zero)
+00805B83  lhu s7, 8(zero)
+00006503  lwu a0, 0(zero)
+00C03E03  ld t3, 12(zero)
+00800BEF  jal s7, 8
+08C78D67  jalr s10, 140(a5)
+00014497  auipc s1, 20
+06310263  beq sp, gp, 100
+00A49263  bne s1, a0, 4
+00A4C463  blt s1, a0, 8
+00F1D263  bge gp, a5, 4
+00A4E563  bltu s1, a0, 10
+00F1F263  bgeu gp, a5, 4
+000000E7  jalr ra, 0(zero)
+00000013  addi zero, zero, 0

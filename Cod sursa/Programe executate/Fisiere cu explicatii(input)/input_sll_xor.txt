@@ -1,0 +1,32 @@
+00A00193  addi gp, zero, 10
+00200113  addi sp, zero, 2
+002192B3  sll t0, gp, sp
+0021C1B3  xor gp, gp, sp
+0032F333  and t1, t0, gp
+0031C1B3  xor gp, gp, gp
+002063B3  or t2, zero, sp
+00404513  xori a0, zero, 4
+00634333  xor t1, t1, t1
+00506593  ori a1, zero, 5
+00111113  slli sp, sp, 1
+00115113  srli sp, sp, 1
+40115113  srai sp, sp, 1
+00015263  bge sp, zero, 4
+00000033  add zero, zero, zero
+00003137  lui sp, 3
+FFF12513  slti a0, sp, -1
+FFF13593  sltiu a1, sp, -1
+00214133  xor sp, sp, sp
+FFE00213  addi tp, zero, -2
+0042A6B3  slt a3, t0, tp
+0042B733  sltu a4, t0, tp
+00424233  xor tp, tp, tp
+00600593  addi a1, zero, 6
+0052C2B3  xor t0, t0, t0
+00E5D7B3  srl a5, a1, a4
+00F7C7B3  xor a5, a5, a5
+00E74733  xor a4, a4, a4
+4075D5B3  sra a1, a1, t2
+0073C3B3  xor t2, t2, t2
+00B5C5B3  xor a1, a1, a1
+000000E7  jalr ra, 0(zero)
