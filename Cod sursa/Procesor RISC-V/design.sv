@@ -1,4 +1,5 @@
-//Incercare eliminare asignari blocante
+//De trecut la LE si de modificat instructiunile de load si store sa foloseasca registrii de 8 biti
+//Clock controlat de buton
 module ClockDivider (
   input wire clk_in,
   input wire CLK_BUTT,
@@ -25,7 +26,7 @@ module ClockDivider (
       endcase
   end
 endmodule
-
+//Modificare registru sp si asignare pe 6 biti shamt si instructiuni shiftare
 module RISCVProcessor (
     input clk,
     input reset,
@@ -37,17 +38,18 @@ module RISCVProcessor (
   reg Jump;
   reg[63:0] jumpAddress;
   reg [63:0] registers [0:31];
-  reg [63:0] dataMemory[0:99];
-  reg [8:0] memory[0:175];
+  reg [63:0] dataMemory[0:128];
+  reg [8:0] memory[0:59];
   reg [31:0] instruction;
   reg [6:0] opcode;
   reg [2:0] funct3;
   reg [6:0] funct7;
   reg [11:0] imm12;
-  reg [4:0] shamt;
+  reg [5:0] shamt;//Pentru RV64I, shamt are 6 biti
   reg [4:0] rs1;
   reg [4:0] rs2;
   reg [4:0] rd;
+  reg [63:0] regtest;
   integer i;
     initial begin
       //Citirea din fisier a continutului memoriei
@@ -59,7 +61,7 @@ module RISCVProcessor (
       regdif=0;
       //Initializare cu 0 banc de registre
         for (i = 0; i <= 31; i = i + 1)
-          registers[i] = 0;
+          registers[i] = (i==2)?128:0;
       //Intializare cu 0 memorie de date
       $readmemh("data.mem", dataMemory);
       result=0;
@@ -78,7 +80,7 @@ module RISCVProcessor (
       funct3 = instruction[14:12];
       funct7 = instruction[31:25];
       imm12 = instruction[31:20];
-      shamt = instruction[24:20];
+      shamt = instruction[25:20];
       rs1 = instruction[19:15];
       rs2 = instruction[24:20];
       rd = instruction[11:7];
@@ -94,89 +96,88 @@ module RISCVProcessor (
               if (funct7 == 7'b0000000)
                 begin
                   if (rd!=0) begin
-                    registers[rd]<= registers[rs1] + registers[rs2]; 
-                   result<=registers[rs1] + registers[rs2]; 
+                   registers[rd]= registers[rs1] + registers[rs2]; 
+                   result=registers[rd]; 
                   end
                   else
-                        result<=0;
+                        result=0;
                 end
               else if (funct7 == 7'b0100000) 
               begin 
               if (rd!=0) begin
-                registers[rd]<= registers[rs1] - registers[rs2]; 
-                result<=registers[rs1] - registers[rs2];      
+                registers[rd]= registers[rs1] - registers[rs2]; 
+                result=registers[rd];      
                 end  
                 else
-                        result<=0;  
+                        result=0;  
               end 
             end
-            3'b001: begin  // SLL
+            3'b001: begin  // SLL pentru RV64I
                if (rd!=0) begin
-                 registers[rd]<= registers[rs1] << registers[rs2][4:0];
-                 result<=registers[rs1] << registers[rs2][4:0];
-               end
+                 registers[rd] = registers[rs1] << registers[rs2][5:0];
+              result=registers[rd]; end
               else
-                        result<=0;
+                        result=0;
             end
             3'b010: begin  // SLT verificat pe cazul numerelor negative
             if (rd!=0) begin
               regdif=registers[rs1] - registers[rs2];
-              registers[rd] <= regdif[63];
-              result<=regdif[63]; 
+              registers[rd] = regdif[63];
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b011: begin  // SLTU
             if (rd!=0) begin
-              registers[rd] <= (registers[rs1] < registers[rs2]) ? 1 : 0;
-              result<=(registers[rs1] < registers[rs2]) ? 1 : 0; 
+              registers[rd] = (registers[rs1] < registers[rs2]) ? 1 : 0;
+              result=registers[rd]; 
               end
               else
                         result=0;
             end
             3'b100: begin  // XOR
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] ^ registers[rs2];
-              result<=registers[rs1] ^ registers[rs2]; 
+              registers[rd] = registers[rs1] ^ registers[rs2];
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b101: begin
-              if (funct7 == 7'b0000000) begin  // SRL
+              if (funct7 == 7'b0000000) begin  // SRL pentru RV64I
               if (rd!=0) begin
-                registers[rd] <= registers[rs1] >> registers[rs2][4:0];
-                result<=registers[rs1] >> registers[rs2][4:0]; 
+                registers[rd] = registers[rs1] >> registers[rs2][5:0];
+                result=registers[rd]; 
                 end
                 else
-                        result<=0;
-              end else if (funct7 == 7'b0100000) begin  // SRA
+                        result=0;
+              end else if (funct7 == 7'b0100000) begin  // SRA pentru RV64I
               if (rd!=0) begin
-                registers[rd] <= registers[rs1] >>> registers[rs2][4:0];
-                result<=registers[rs1] >>> registers[rs2][4:0]; 
+                registers[rd] = registers[rs1] >>> registers[rs2][5:0];
+                result=registers[rd]; 
                 end
                 else
-                        result<=0;
+                        result=0;
               end
             end
             3'b110: begin  // OR
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] | registers[rs2];
-              result<=registers[rs1] | registers[rs2]; 
+              registers[rd] = registers[rs1] | registers[rs2];
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b111: begin  // AND
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] & registers[rs2];
-              result<= registers[rs1] & registers[rs2];
+              registers[rd] = registers[rs1] & registers[rs2];
+              result=registers[rd];
               end
               else
-                        result<=0; 
+                        result=0; 
             end
-            default: result<= 0;
+            default: result = 0;
           endcase
         end
         7'b0010011: begin
@@ -185,82 +186,82 @@ module RISCVProcessor (
           case (funct3)
             3'b000: begin  // ADDI
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] + {{52{imm12[11]}},imm12};
-              result<=registers[rs1] + {{52{imm12[11]}},imm12}; 
+              registers[rd] = registers[rs1] + {{52{imm12[11]}},imm12};
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b010: begin  // SLTI 
             if (rd!=0) begin
               regdif=registers[rs1]-{{52{imm12[11]}},imm12};
-              registers[rd] <= regdif[63];
-              result<=regdif[63]; 
+              registers[rd] = regdif[63];
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b011: begin  // SLTIU
             if (rd!=0) begin
-              registers[rd] <= (registers[rs1] < {{52{imm12[11]}},imm12}) ? 1 : 0;
-              result <= (registers[rs1] < {{52{imm12[11]}},imm12}) ? 1 : 0;
+              registers[rd] = (registers[rs1] < {{52{imm12[11]}},imm12}) ? 1 : 0;
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b100: begin  // XORI
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] ^ {{52{imm12[11]}},imm12}; 
-              result<= registers[rs1] ^ {{52{imm12[11]}},imm12}; 
+              registers[rd] = registers[rs1] ^ {{52{imm12[11]}},imm12}; 
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b110: begin  // ORI
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] | {{52{imm12[11]}},imm12};
-              result<= registers[rs1] | {{52{imm12[11]}},imm12}; 
+              registers[rd] = registers[rs1] | {{52{imm12[11]}},imm12};
+              result=registers[rd]; 
               end
               else
-                        result<=0;
+                        result=0;
             end
             3'b111: begin  // ANDI
             if (rd!=0) begin
-              registers[rd] <= registers[rs1] & {{52{imm12[11]}},imm12};
-              result<= registers[rs1] & {{52{imm12[11]}},imm12};
+              registers[rd] = registers[rs1] & {{52{imm12[11]}},imm12};
+              result=registers[rd];
               end 
               else
-                        result<=0;
+                        result=0;
             end
             3'b001: begin // SLLI
                 if (rd!=0) begin
-                  registers[rd] <= registers[rs1] << shamt;
-                result<=registers[rs1] << shamt; 
+                registers[rd] = registers[rs1] << shamt;
+                result=registers[rd]; 
                 end
                 else
-                        result<=0;
+                        result=0;
             end
             3'b101: begin
               if (funct7 == 7'b0000000) 
                 begin  // SRLI
                 if (rd!=0) begin
-                  registers[rd] <= registers[rs1] >> shamt;
-                  result<= registers[rs1] >> shamt;
+                  registers[rd] = registers[rs1] >> shamt;
+                  result=registers[rd]; 
                   end
                   else
-                        result<=0;
+                        result=0;
                 end 
               else if (funct7 == 7'b0100000) 
                 begin  // SRAI
                 if (rd!=0) begin
-                  registers[rd] <= registers[rs1] >>> shamt;
-                  result<= registers[rs1] >>> shamt;
+                  registers[rd] = registers[rs1] >>> shamt;
+                  result=registers[rd]; 
                   end
                   else
-                        result<=0;
+                        result=0;
                 end
             end
-            default: result <= 0;
+            default: result = 0;
           endcase
         end
         7'b0000011: begin
@@ -268,34 +269,34 @@ module RISCVProcessor (
            Jump=0;
           case (funct3)
             3'b000: begin  // LB
-              registers[rd]<= {{56{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
-              result<= {{56{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
+              registers[rd] = {{56{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
+              result=registers[rd]; 
             end
             3'b001: begin  // LH
-              registers[rd] <= {{48{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]};
-              result<={{48{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]};; 
+              registers[rd] = {{48{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]};
+              result=registers[rd]; 
             end
             3'b010: begin  // LW
-              registers[rd] <= {{32{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
-              result<={{32{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              registers[rd] = {{32{dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31]}},dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              result=registers[rd]; 
             end
             3'b011: begin  // LD
-              registers[rd] <= dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}];
-              result<= dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}];
+              registers[rd] = dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}];
+              result=registers[rd]; 
             end
             3'b100: begin  // LBU
-              registers[rd] <= {56'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
-              result<={56'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};; 
+              registers[rd] = {56'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][7:0]};
+              result=registers[rd]; 
             end
             3'b101: begin  // LHU
-              registers[rd] <= {48'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]}; 
-              result<= {48'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]}; 
+              registers[rd] = {48'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][15:0]}; 
+              result=registers[rd]; 
             end
             3'b110: begin  // LWU
-              registers[rd] <= {32'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
-              result<= {32'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]}; 
+              registers[rd] = {32'b0,dataMemory[registers[rs1]+{{52{imm12[11]}},imm12}][31:0]};
+              result=registers[rd]; 
             end
-            default: result <= 0;
+            default: result = 0;
           endcase
         end
         7'b0100011: begin
@@ -303,44 +304,45 @@ module RISCVProcessor (
            Jump=0;
           case (funct3)
             3'b000: begin  // SB
-              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] <= registers[rs2][7:0];
-              result <= registers[rs2][7:0];
+              dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][7:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b001: begin  // SH
               dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][15:0];
-              result<= registers[rs2][15:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b010: begin  // SW
               dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2][31:0];
-              result  <= registers[rs2][31:0];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
             3'b011: begin  // SD
               dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}] = registers[rs2];
-              result<= registers[rs2];
+              result = dataMemory[registers[rs1]+{{52{instruction[31]}},{instruction[31:25],instruction[11:7]}}];
             end
-            default: result <= 0;
+            default: result = 0;
           endcase
         end
         7'b0110111: begin  // LUI
         if (rd!=0) begin
-          registers[rd] <= {{32{instruction[31]}},instruction[31:12], 12'b0};
-          result<={{32{instruction[31]}},instruction[31:12], 12'b0}; 
+          registers[rd] = {{32{instruction[31]}},instruction[31:12], 12'b0};
+          result=registers[rd]; 
            Jump=0;
            end
            else
-                        result<=0;
+                        result=0;
         end
         7'b0010111: begin  // AUIPC
         if (rd!=0) begin
-          registers[rd] <= pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
-          result<= pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
+          registers[rd] = pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
+          regtest=instruction[31:12];
+          result=registers[rd]; 
            Jump=0;
            end
            else
-                        result<=0;
+                        result=0;
         end
         7'b1101111: begin  // JAL
-          registers[rd] <= pc + 4;
+          registers[rd] = pc + 4;
           Jump = 1;
           jumpAddress=pc+{{43{instruction[31]}},{instruction[31],instruction[19:12],instruction[20],instruction[30:21]}, 1'b0};
           result=jumpAddress;
@@ -353,6 +355,7 @@ module RISCVProcessor (
         end
         7'b1100011: begin
           // Instructiuni branch
+          regtest={instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
           case (funct3)
             3'b000: begin  // BEQ
                   Jump=(registers[rs1] == registers[rs2]);
@@ -405,7 +408,7 @@ jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction
         result=0;
         Jump = 0;
         for (i = 0; i <= 31; i = i + 1)
-          registers[i] = 0;
+          registers[i] = (i==2)?128:0;
         $readmemh("data.mem", dataMemory);
     end
   
