@@ -73,8 +73,17 @@ module RISCVProcessor (
   );
   always @(posedge clk_div) begin
     //if(!reset) begin
-    if(bula==0 && Jump==0)
+    if(bula!=0 & Jump==0)
+        bula<=bula-1;
+      if (Jump==1) begin
+            Jump<=0;
+        pc<=pc_jump;
+        reg_e<=0;
+        end
+    if(bula==0 && Jump==0)begin
     instruction_f <= {memory[pc+3][7:0], memory[pc+2][7:0], memory[pc+1][7:0], memory[pc][7:0]};
+      pc<=pc+4;
+    end
     if(bula==0)begin
       if(Jump==0)begin
     instruction_d<=instruction_f;
@@ -181,8 +190,27 @@ module RISCVProcessor (
           Jump <= 1;
           reg_e<= pc - 8;
           jumpAddress_e<=(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0};
-          pc_jump<=(pc)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0};
-          instruction_e<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0]};
+          pc_jump<=(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0};
+          instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
+          /*instruction_e<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0]};
           instruction_d<={memory[(pc-5)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-6)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-7)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-8)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0]};
           instruction_f<={memory[(pc-1)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-2)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-3)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0], memory[(pc-4)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0]};        
           opcode_d <=memory[(pc-8)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][6:0];
@@ -193,14 +221,14 @@ module RISCVProcessor (
           funct7_d<=memory[(pc-5)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:1];
           shamt_d<={memory[(pc-5)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][1:0],memory[(pc-6)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
           imm12_d<={memory[(pc-5)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0],memory[(pc-6)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};          
-		opcode_e <=memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][6:0];
-          rd_e<={memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][3:0],memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7]};
-          funct3_e <=memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][6:4];
-          rs1_e<={memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][3:0],memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7]};
-          rs2_e<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
-          funct7_e<=memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:1];
-          shamt_e<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][1:0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
-          imm12_e<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
+		opcode_d <=memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][6:0];
+          rd_d<={memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][3:0],memory[(pc-12)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7]};
+          funct3_d <=memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][6:4];
+          rs1_d<={memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][3:0],memory[(pc-11)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7]};
+          rs2_d<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
+          funct7_d<=memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:1];
+          shamt_d<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][1:0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};
+          imm12_d<={memory[(pc-9)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:0],memory[(pc-10)+{{43{instruction_e[31]}},{instruction_e[31],instruction_e[19:12],instruction_e[20],instruction_e[30:21]}, 1'b0}][7:4]};*/
         end
         7'b1100111: begin  // JALR
           //registers[rd] = pc + 4;
@@ -211,7 +239,26 @@ module RISCVProcessor (
           bula<=1;*/
           jumpAddress_e<=registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0};
           pc_jump<=registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0};
-          instruction_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[1+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};
+          instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
+          /*instruction_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[1+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};
           instruction_d<={memory[7+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[6+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[5+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[4+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]};
           instruction_f<={memory[11+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[10+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[9+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[8+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0]}; 
           opcode_d <=memory[4+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][6:0];
@@ -229,7 +276,7 @@ module RISCVProcessor (
           rs2_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:4]};
           funct7_e<=memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:1];
           shamt_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][1:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:4]};
-          imm12_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:4]};
+          imm12_e<={memory[3+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:0],memory[2+registers[rs1_e]+{{52{imm12_e[11]}},imm12_e[11:1],1'b0}][7:4]};*/
         end
         7'b1100011: begin
           // Instructiuni branch
@@ -241,8 +288,27 @@ module RISCVProcessor (
               if(registers[rs1_e] == registers[rs2_e]) begin
                 Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
+                /*instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
                 instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
                 instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
           opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
@@ -260,7 +326,7 @@ module RISCVProcessor (
           rs2_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
           funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
           shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
+          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};*/
               end
               else
                 reg_e<=0;
@@ -270,8 +336,27 @@ module RISCVProcessor (
               if(registers[rs1_e] != registers[rs2_e]) begin
                 Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
+                /*instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
                 instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
                 instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
           opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
@@ -290,7 +375,7 @@ module RISCVProcessor (
           funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
           shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
           imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};    
-		
+		*/
               end
               else
                 reg_e<=0;
@@ -300,26 +385,26 @@ module RISCVProcessor (
               if((registers[rs1_e] - registers[rs2_e])>>63) begin
                 Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-                instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-          opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_d<={memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_d <=memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_d<={memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_d<=memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-            opcode_e <=memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_e<={memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_e <=memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_e<={memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
               end
               else
                 reg_e<=0;
@@ -328,26 +413,26 @@ module RISCVProcessor (
               if(!((registers[rs1_e] - registers[rs2_e])>>63)) begin
                 Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-                instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-          opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_d<={memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_d <=memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_d<={memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_d<=memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-            opcode_e <=memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_e<={memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_e <=memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_e<={memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
               end
               else
                 reg_e<=0;
@@ -356,26 +441,26 @@ module RISCVProcessor (
               if(registers[rs1_e] < registers[rs2_e]) begin
                 Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-                instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-          opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_d<={memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_d <=memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_d<={memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_d<=memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-            opcode_e <=memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_e<={memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_e <=memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_e<={memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
               end
               else
                 reg_e<=0;
@@ -384,26 +469,26 @@ module RISCVProcessor (
               if(registers[rs1_e] >= registers[rs2_e]) begin
                Jump<=1;
                 reg_e<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
-                pc_jump<=pc+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};               
-                instruction_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-                instruction_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};;
-                instruction_f<={memory[pc-1+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-2+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-3+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0], memory[pc-4+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0]};
-          opcode_d <=memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_d<={memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-8+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_d <=memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_d<={memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-7+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_d<=memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_d<={memory[pc-5+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-6+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-            opcode_e <=memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:0];
-          rd_e<={memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          funct3_e <=memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][6:4];
-          rs1_e<={memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][3:0],memory[pc-11+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7]};
-          rs2_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          funct7_e<=memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:1];
-          shamt_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][1:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
-          imm12_e<={memory[pc-9+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:0],memory[pc-10+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0}][7:4]};
+                pc_jump<=pc-12+{{52{instruction_e[31]}},instruction_e[31],instruction_e[7],instruction_e[30:25],instruction_e[11:8],1'b0};
+                instruction_f<=0;
+          instruction_d<=0;
+          opcode_d<=0;
+          rd_d<=0;
+          funct3_d<=0;
+          rs1_d<=0;
+          rs2_d<=0;
+          funct7_d<=0;
+          shamt_d<=0;
+          imm12_d<=0;
+          instruction_e<=0;
+          opcode_e<=0;
+          rd_e<=0;
+          funct3_e<=0;
+          rs1_e<=0;
+          rs2_e<=0;
+          funct7_e<=0;
+          shamt_e<=0;
+          imm12_e<=0;
               end
               else
                 reg_e<=0;
@@ -752,17 +837,6 @@ module RISCVProcessor (
     /*if(bula && Jump)
       result<=0;*/
    // $display("%x %x",result,instruction_wb);
-      if(bula!=0)
-        bula<=bula-1;
-      if (Jump==1) begin
-            Jump<=0;
-        pc<=pc_jump;
-        jumpAddress_e<=0;
-        result<=result;
-        end
-      else if(bula==0) begin
-            pc<= pc + 4; // Pentru celelalte instructiuni
-        end
       //end
    /* else
       //daca reset este activ,resetez pc, bancul de registre, flag-ul Jump si memoria de date

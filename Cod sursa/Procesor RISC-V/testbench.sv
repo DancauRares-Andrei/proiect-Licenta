@@ -26,7 +26,7 @@ module RISCVProcessor_tb;
         $dumpvars;
 
         // Oprirea simularii
-        #3600 $finish;
+        #5000 $finish;
     end
 
 endmodule
