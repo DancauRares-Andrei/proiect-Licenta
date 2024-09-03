@@ -1,4 +1,4 @@
-//Varianta cu un singur bloc always@
+//Varianta cu un singur bloc always@ si adaugare constrangere registru 0
 module ClockDivider (
   input wire clk_in,
   output reg clk_out
@@ -84,48 +84,87 @@ module RISCVProcessor (
             3'b000: begin  // ADD, SUB
               if (funct7 == 7'b0000000)
                 begin
+                  if (rd!=0) begin
                    registers[rd]= registers[rs1] + registers[rs2]; 
                    result=registers[rd]; 
+                  end
+                  else
+                        result=0;
                 end
               else if (funct7 == 7'b0100000) 
               begin 
+              if (rd!=0) begin
                 registers[rd]= registers[rs1] - registers[rs2]; 
-                result=registers[rd];          
+                result=registers[rd];      
+                end  
+                else
+                        result=0;  
               end 
             end
             3'b001: begin  // SLL
+               if (rd!=0) begin
               registers[rd] = registers[rs1] << registers[rs2][4:0];
-              result=registers[rd]; 
+              result=registers[rd]; end
+              else
+                        result=0;
             end
             3'b010: begin  // SLT verificat pe cazul numerelor negative
+            if (rd!=0) begin
               regdif=registers[rs1] - registers[rs2];
               registers[rd] = regdif[63];
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b011: begin  // SLTU
+            if (rd!=0) begin
               registers[rd] = (registers[rs1] < registers[rs2]) ? 1 : 0;
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b100: begin  // XOR
+            if (rd!=0) begin
               registers[rd] = registers[rs1] ^ registers[rs2];
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b101: begin
               if (funct7 == 7'b0000000) begin  // SRL
+              if (rd!=0) begin
                 registers[rd] = registers[rs1] >> registers[rs2][4:0];
                 result=registers[rd]; 
+                end
+                else
+                        result=0;
               end else if (funct7 == 7'b0100000) begin  // SRA
+              if (rd!=0) begin
                 registers[rd] = registers[rs1] >>> registers[rs2][4:0];
                 result=registers[rd]; 
+                end
+                else
+                        result=0;
               end
             end
             3'b110: begin  // OR
+            if (rd!=0) begin
               registers[rd] = registers[rs1] | registers[rs2];
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b111: begin  // AND
+            if (rd!=0) begin
               registers[rd] = registers[rs1] & registers[rs2];
-              result=registers[rd]; 
+              result=registers[rd];
+              end
+              else
+                        result=0; 
             end
             default: result = 0;
           endcase
@@ -135,44 +174,80 @@ module RISCVProcessor (
            Jump=0;
           case (funct3)
             3'b000: begin  // ADDI
+            if (rd!=0) begin
               registers[rd] = registers[rs1] + {{52{imm12[11]}},imm12};
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b010: begin  // SLTI 
+            if (rd!=0) begin
               regdif=registers[rs1]-{{52{imm12[11]}},imm12};
               registers[rd] = regdif[63];
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b011: begin  // SLTIU
+            if (rd!=0) begin
               registers[rd] = (registers[rs1] < {{52{imm12[11]}},imm12}) ? 1 : 0;
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b100: begin  // XORI
+            if (rd!=0) begin
               registers[rd] = registers[rs1] ^ {{52{imm12[11]}},imm12}; 
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b110: begin  // ORI
+            if (rd!=0) begin
               registers[rd] = registers[rs1] | {{52{imm12[11]}},imm12};
               result=registers[rd]; 
+              end
+              else
+                        result=0;
             end
             3'b111: begin  // ANDI
+            if (rd!=0) begin
               registers[rd] = registers[rs1] & {{52{imm12[11]}},imm12};
-              result=registers[rd]; 
+              result=registers[rd];
+              end 
+              else
+                        result=0;
             end
             3'b001: begin // SLLI
+                if (rd!=0) begin
                 registers[rd] = registers[rs1] << shamt;
                 result=registers[rd]; 
+                end
+                else
+                        result=0;
             end
             3'b101: begin
               if (funct7 == 7'b0000000) 
                 begin  // SRLI
+                if (rd!=0) begin
                   registers[rd] = registers[rs1] >> shamt;
                   result=registers[rd]; 
+                  end
+                  else
+                        result=0;
                 end 
               else if (funct7 == 7'b0100000) 
                 begin  // SRAI
+                if (rd!=0) begin
                   registers[rd] = registers[rs1] >>> shamt;
                   result=registers[rd]; 
+                  end
+                  else
+                        result=0;
                 end
             end
             default: result = 0;
@@ -237,15 +312,23 @@ module RISCVProcessor (
           endcase
         end
         7'b0110111: begin  // LUI
+        if (rd!=0) begin
           registers[rd] = {{32{instruction[31]}},instruction[31:12], 12'b0};
           result=registers[rd]; 
            Jump=0;
+           end
+           else
+                        result=0;
         end
         7'b0010111: begin  // AUIPC
+        if (rd!=0) begin
           registers[rd] = pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
           regtest=instruction[31:12];
           result=registers[rd]; 
            Jump=0;
+           end
+           else
+                        result=0;
         end
         7'b1101111: begin  // JAL
           registers[rd] = pc + 4;
