@@ -1,3 +1,4 @@
+//Varianta cu un singur bloc always@
 module ClockDivider (
   input wire clk_in,
   output reg clk_out
@@ -39,11 +40,12 @@ module RISCVProcessor (
   reg [4:0] rs1;
   reg [4:0] rs2;
   reg [4:0] rd;
+  reg [63:0] regtest;
   integer i;
     initial begin
       //Citirea din fisier a continutului memoriei
       $readmemh("instructions.mem", memory);
-      pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
+      pc = 64'h0; // Initializare cu 0
       //Initializare registrii de lucru
       Jump=0;
       jumpAddress=0;
@@ -60,9 +62,9 @@ module RISCVProcessor (
     .clk_in(clk),
     .clk_out(clk_div)
   );
-  //La fiecare schimbare a lui PC calculez noua instructiune si parametrii acesteia
-  always @(pc) begin
-        instruction = {memory[pc][7:0], memory[pc+1][7:0], memory[pc+2][7:0], memory[pc+3][7:0]};
+  always @(posedge clk_div) begin
+    //Calculez noua instructiune si parametrii acesteia
+    instruction = {memory[pc][7:0], memory[pc+1][7:0], memory[pc+2][7:0], memory[pc+3][7:0]};
         opcode = instruction[6:0];
       funct3 = instruction[14:12];
       funct7 = instruction[31:25];
@@ -71,21 +73,8 @@ module RISCVProcessor (
       rs1 = instruction[19:15];
       rs2 = instruction[24:20];
       rd = instruction[11:7];
-    end
-  always @(posedge clk_div) begin
-        if (reset) begin
-            pc = 64'hFFFFFFFFFFFFFFFC; // Initializare cu -4
-        end
-        else if (Jump) begin
-            pc = jumpAddress; // Actualizez PC in urma unui jump/branch
-        end
-    else begin
-            pc= pc + 4; // Pentru celelalte instructiuni
-        end
-    end
-  //Prelucrarea instructiunii
-  always @(negedge clk_div) begin
-    if(!reset)
+    if(!reset) begin
+      //Prelucrarea instructiunii
         // Identificarea tipului de instructiune
       case (opcode)
         7'b0110011: begin
@@ -254,6 +243,7 @@ module RISCVProcessor (
         end
         7'b0010111: begin  // AUIPC
           registers[rd] = pc + {{32{instruction[31]}},instruction[31:12], 12'b0};
+          regtest=instruction[31:12];
           result=registers[rd]; 
            Jump=0;
         end
@@ -271,16 +261,17 @@ module RISCVProcessor (
         end
         7'b1100011: begin
           // Instructiuni branch
+          regtest={instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
           case (funct3)
             3'b000: begin  // BEQ
                   Jump=(registers[rs1] == registers[rs2]);
-                  jumpAddress={{52{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
+                  jumpAddress=pc+{{52{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
               result=Jump?jumpAddress:0;
             end
             3'b001: begin  // BNE
                   Jump=(registers[rs1] != registers[rs2]);
                   jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction[30:25],instruction[11:8],1'b0};
-                  result=Jump?jumpAddress:0;
+                  result=Jump?jumpAddress:0;             	
             end
             3'b100: begin  // BLT
               regdif=registers[rs1] - registers[rs2];
@@ -309,9 +300,17 @@ jumpAddress=pc+{{51{instruction[31]}},instruction[31],instruction[7],instruction
         end
         default: result = 0;
       endcase
+      if (Jump) begin
+            pc = jumpAddress; // Actualizez PC in urma unui jump/branch
+        end
+    else begin
+            pc= pc + 4; // Pentru celelalte instructiuni
+        end
+      end
     else
-      //daca reset este activ, resetez bancul de registre, flag-urile Jump si Branch si memoria de date
+      //daca reset este activ,resetez pc, bancul de registre, flag-ul Jump si memoria de date
       begin
+        pc = 64'h0;
         result=0;
         Jump = 0;
         for (i = 0; i <= 31; i = i + 1)

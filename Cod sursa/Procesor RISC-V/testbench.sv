@@ -18,7 +18,7 @@ module RISCVProcessor_tb;
         // Initializarea semnalelor de intrare
         reset = 0;
         clk = 0;
-
+		
         // Pregatirea fisierului vcd
         $dumpfile("simulation.vcd");
         $dumpvars;
