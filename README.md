@@ -1,2 +1,2 @@
 # proiect-Licenta
-În cadrul proiectului de diplomă am implementat un procesor RISC-V folosind HDL Verilog, două asambloare denumite codificatoare, unul din ele a fost implementat folosind C#, celălalt folosind Python. A mai fost dezvoltat un emulator pentru procesor folosind un Raspberry Pi Pico.
+În cadrul proiectului de diplomă am implementat un procesor RISC-V folosind HDL Verilog, două asambloare denumite codificatoare, unul din ele a fost implementat folosind C#, celălalt folosind Python. A mai fost dezvoltat un emulator pentru procesor folosind un Raspberry Pi Pico. Ca bonus a mai fost implementat un emulator al procesorului folosind un Arduino Nano 3. Emulatoarele nu execută instrucțiunile în pipeline.
